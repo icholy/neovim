@@ -37,7 +37,7 @@ end
 ---@param uri string
 ---@return boolean
 local function is_windows_file_uri(uri)
-  return uri:match('^file:/+[a-zA-Z]:') ~= nil
+  return uri:match('^file:///[a-zA-Z]:') ~= nil
 end
 
 ---URI-encodes a string using percent escapes.
@@ -109,13 +109,11 @@ function M.uri_to_fname(uri)
     uri = uri:sub(1, fragment_index - 1)
   end
   uri = M.uri_decode(uri)
-  --TODO improve this.
+  local fname = uri:gsub('^file://', '')
   if is_windows_file_uri(uri) then
-    uri = uri:gsub('^file:/+', ''):gsub('/', '\\')
-  else
-    uri = uri:gsub('^file:/+', '/') ---@type string
+    fname = fname:sub(2):gsub('/', '\\') ---@type string
   end
-  return uri
+  return fname
 end
 
 ---Gets the buffer for a uri.
