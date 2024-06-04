@@ -4,6 +4,7 @@ local lsp = vim.lsp
 local log = lsp.log
 local ms = lsp.protocol.Methods
 local changetracking = lsp._changetracking
+local util = lsp.util
 local validate = vim.validate
 
 --- @alias vim.lsp.client.on_init_cb fun(client: vim.lsp.Client, initialize_result: lsp.InitializeResult)
@@ -674,7 +675,7 @@ function Client:_request(method, params, handler, bufnr)
   -- Ensure pending didChange notifications are sent so that the server doesn't operate on a stale state
   changetracking.flush(self, bufnr)
   bufnr = resolve_bufnr(bufnr)
-  local version = vim.b[bufnr].changedtick
+  local version = util.buf_versions[bufnr]
   log.debug(self._log_prefix, 'client.request', self.id, method, params, handler, bufnr)
   local success, request_id = self.rpc.request(method, params, function(err, result)
     local context = {
@@ -922,7 +923,7 @@ function Client:_text_document_did_open_handler(bufnr)
 
   local params = {
     textDocument = {
-      version = vim.b[bufnr].changedtick,
+      version = util.buf_versions[bufnr],
       uri = vim.uri_from_bufnr(bufnr),
       languageId = self.get_language_id(bufnr, filetype),
       text = lsp._buf_get_full_text(bufnr),
